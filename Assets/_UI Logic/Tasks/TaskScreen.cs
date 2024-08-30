@@ -16,11 +16,11 @@ public class TaskScreen : DefaultMenuScreen
     [SerializeField] private RectTransform taskRoot;
     [SerializeField] private TaskElement defaultPrefab;
     [SerializeField] private TaskElement prefabWithButton;
-
-    private TaskElement prefab;
+    
     [SerializeField] private Image loadingImage;
     [SerializeField] private GameObject levelUpPopUp;
     [SerializeField] private TextMeshProUGUI levelsText;
+    [SerializeField] private SwitchCategoryButton levels, partners;
 
     private const string TasksKey = "SavedTasks";
     private int multiplier;
@@ -31,17 +31,34 @@ public class TaskScreen : DefaultMenuScreen
     private API client;
 
     [ContextMenu("SwitchTasks")]
-    public void SwitchRoot()
+    public void SwitchRoot() => SwitchRootTasks(!levelTask);
+
+    private void Awake()
     {
-        SwitchRootTasks(!levelTask);
+        levels.onClick = async () =>
+        {
+            await SwitchCategory(true);
+        };
+
+        partners.onClick = async () =>
+        {
+            await SwitchCategory(false);
+        };
+    }
+
+    private async UniTask SwitchCategory(bool isLevelTasks)
+    {
+        levels.interactable = !isLevelTasks;
+        partners.interactable = isLevelTasks;
+        ShowLoadingAnimation();
+        SwitchRootTasks(isLevelTasks);
     }
 
     public async void SwitchRootTasks(bool isLevelTasks)
     {
+        ClearExistingTaskPrefabs();
         multiplier = await menu.GetCurrentMultiplier();
         levelTask = isLevelTasks;
-
-        ClearExistingTaskPrefabs();
 
         if (levelTask)
         {
@@ -51,28 +68,32 @@ public class TaskScreen : DefaultMenuScreen
         {
             await LoadExternalTasksAndInitialize();
         }
+
+        if (currentActiveTasks.All(x => x.IsCompleted))
+        {
+            await HandleLevelUp();
+            await SetupAndInitializeGameTasks();
+        }
+        
+        HideLoadingAnimation();
+        taskRoot.ForceUpdateRectTransforms();
     }
 
     public async UniTask SetupAndInitializeGameTasks()
     {
         multiplier = await menu.GetCurrentMultiplier();
-        Debug.Log(multiplier);
-        
         currentTasks = LoadTasks();
         if (!currentTasks.Any()) GenerateNewTasks();
-        
+
         var activeTaskStatus = await menu.GetActiveTasks();
         UpdateTaskStatus(activeTaskStatus);
-
         InitializeActiveTasks();
-        
         await UpdateTasksProgress();
     }
 
     private async UniTask LoadExternalTasksAndInitialize()
     {
         currentUser = await client.GetUserAsync(menu.GetUID);
-
         var watchUrls = await FetchFilteredUrlsAsync("watchurl", currentUser.AlreadyDoneUrls);
         var subscribeUrls = await FetchFilteredUrlsAsync("subscribeurl", currentUser.AlreadyDoneUrls);
 
@@ -98,41 +119,18 @@ public class TaskScreen : DefaultMenuScreen
     public override async void OpenScreenLazy()
     {
         client = new API();
-
         base.OpenScreen();
-        ShowLoadingAnimation();
-
-        ClearExistingTaskPrefabs();
-
-        if (levelTask)
-        {
-            await SetupAndInitializeGameTasks();
-        }
-        else
-        {
-            await LoadExternalTasksAndInitialize();
-        }
-
-        HideLoadingAnimation();
-
-        if (currentActiveTasks.All(x => x.IsCompleted))
-        {
-            await HandleLevelUp();
-            await SetupAndInitializeGameTasks();
-        }
-
-        taskRoot.ForceUpdateRectTransforms();
-        
+        SwitchRootTasks(true);
+        partners.interactable = true;
+        levels.interactable = false;
     }
-    
+
     private async UniTask UpdateTasksProgress()
     {
-        Debug.Log("start checking");
+        await UniTask.Delay(100);
         
         foreach (var task in currentActiveTasks)
         {
-            Debug.Log(task.Type);
-            
             if (task.IsCompleted) continue;
 
             int value = task.Type switch
@@ -142,21 +140,17 @@ public class TaskScreen : DefaultMenuScreen
                 _ => 0
             };
 
-            Debug.Log(value);
-            Debug.Log(task.TaskText);
-            
             if (task.action.CheckForCompletion(value))
             {
                 CompleteTask(task);
             }
         }
     }
-    
+
     private void CompleteTask(Task task)
     {
         task.IsCompleted = true;
         task.OnComplete?.Invoke();
-
         int taskIndex = currentActiveTasks.IndexOf(task);
         menu.UpdateTaskCompletion(taskIndex, task.RewardAmount);
     }
@@ -165,6 +159,7 @@ public class TaskScreen : DefaultMenuScreen
     {
         foreach (Transform child in taskRoot)
         {
+            child.DOKill();
             Destroy(child.gameObject);
         }
         currentActiveTasks.Clear();
@@ -173,11 +168,9 @@ public class TaskScreen : DefaultMenuScreen
     private async UniTask HandleLevelUp()
     {
         PlayerPrefs.SetString(TasksKey, "[]");
-        
         await menu.IncreaseMultiplier();
         multiplier++;
         UpdateLevelText();
-        // multiplier = await menu.GetCurrentMultiplier();
         currentActiveTasks.Clear();
         levelUpPopUp.transform.localScale = Vector3.zero;
         levelUpPopUp.SetActive(true);
@@ -197,7 +190,7 @@ public class TaskScreen : DefaultMenuScreen
 
         SaveTasks(currentTasks);
     }
-    
+
     public void SaveTasks(List<Task> tasks)
     {
         string json = JsonConvert.SerializeObject(tasks);
@@ -207,9 +200,12 @@ public class TaskScreen : DefaultMenuScreen
 
     private void ShowLoadingAnimation()
     {
+        levels.SetInteractableWithoutChangeGraphic(false);
+        partners.SetInteractableWithoutChangeGraphic(false);
+        
         loadingImage.rectTransform.DOKill();
         loadingImage.enabled = true;
-        loadingImage.rectTransform.DORotate(new Vector3(90, 0, 0), 1)
+        loadingImage.rectTransform.DORotate(new Vector3(0, 0, 90), 0.1f)
             .SetEase(Ease.Linear)
             .SetLoops(-1, LoopType.Incremental);
     }
@@ -218,11 +214,12 @@ public class TaskScreen : DefaultMenuScreen
     {
         loadingImage.rectTransform.DOKill();
         loadingImage.enabled = false;
+        levels.SetInteractableWithoutChangeGraphic(!levelTask);
+        partners.SetInteractableWithoutChangeGraphic(levelTask);
     }
 
     private void UpdateTaskStatus(CurrentTasks dict)
     {
-        // Удаляем выполненные задачи
         if (dict.task1) currentTasks[0] = null;
         if (dict.task2) currentTasks[1] = null;
         if (dict.task3) currentTasks[2] = null;
@@ -235,8 +232,7 @@ public class TaskScreen : DefaultMenuScreen
             if (task == null) continue;
 
             currentActiveTasks.Add(task);
-
-            prefab = task.Type == TaskType.SubscribeUrl || task.Type == TaskType.WatchUrl
+            var prefab = task.Type == TaskType.SubscribeUrl || task.Type == TaskType.WatchUrl
                 ? prefabWithButton
                 : defaultPrefab;
 

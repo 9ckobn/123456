@@ -588,6 +588,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 40145584}
+  - component: {fileID: 40145586}
+  - component: {fileID: 40145585}
   m_Layer: 5
   m_Name: PartnerTasks
   m_TagString: Untagged
@@ -617,6 +619,30 @@ RectTransform:
   m_AnchoredPosition: {x: 270, y: 0}
   m_SizeDelta: {x: 540, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &40145585
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40145583}
+  m_CullTransparentMesh: 1
+--- !u!114 &40145586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40145583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abef0f8d99ed4a0e903442a33dbaadb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetGraphic: {fileID: 808219016}
+  text: {fileID: 1017751432}
+  activeColor: {r: 1, g: 0.41960788, b: 0, a: 1}
+  inActiveColor: {r: 1, g: 1, b: 1, a: 0.39215687}
 --- !u!1 &52481748
 GameObject:
   m_ObjectHideFlags: 0
@@ -6625,8 +6651,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -12.5, y: 0.5}
-  m_SizeDelta: {x: -25, y: 1}
+  m_AnchoredPosition: {x: -12.5, y: 0}
+  m_SizeDelta: {x: -25, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &808219016
 MonoBehaviour:
@@ -9894,6 +9920,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1254417883}
+  - component: {fileID: 1254417885}
+  - component: {fileID: 1254417884}
   m_Layer: 5
   m_Name: LevelTasks
   m_TagString: Untagged
@@ -9923,6 +9951,30 @@ RectTransform:
   m_AnchoredPosition: {x: -270, y: 0}
   m_SizeDelta: {x: 540, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1254417884
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254417882}
+  m_CullTransparentMesh: 1
+--- !u!114 &1254417885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254417882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abef0f8d99ed4a0e903442a33dbaadb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetGraphic: {fileID: 1750277220}
+  text: {fileID: 992014513}
+  activeColor: {r: 1, g: 0.41960788, b: 0, a: 1}
+  inActiveColor: {r: 1, g: 1, b: 1, a: 0.39215687}
 --- !u!1 &1278768769
 GameObject:
   m_ObjectHideFlags: 0
@@ -13448,8 +13500,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 12.499992, y: 0.5}
-  m_SizeDelta: {x: -25.000015, y: 1}
+  m_AnchoredPosition: {x: 12.5, y: 0}
+  m_SizeDelta: {x: -25, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1750277220
 MonoBehaviour:
@@ -17105,6 +17157,8 @@ MonoBehaviour:
   loadingImage: {fileID: 1467971230}
   levelUpPopUp: {fileID: 1048812239}
   levelsText: {fileID: 992014513}
+  levels: {fileID: 1254417885}
+  partners: {fileID: 40145586}
 --- !u!4 &6941553988498119841
 Transform:
   m_ObjectHideFlags: 0
