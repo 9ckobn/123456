@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -6,10 +7,30 @@ using Random = UnityEngine.Random;
 public class Coin : MonoBehaviour, ICollectable
 {
     [SerializeField] private ParticleSystem collectFx;
+    public float rotationSpeed = 90f;
 
     private void OnEnable()
     {
-        transform.DORotate(new Vector3(0, 180, 0), Random.Range(0.5f, 0.85f)).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.Linear);
+        rotationSpeed = Random.Range(-1, 1) > 0 ? Random.Range(-180, -90) : Random.Range(90, 180);
+
+        StartCoroutine(RotationAnimation());
+    }
+
+
+    private void OnDestroy()
+    {
+        this.StopAllCoroutines();
+    }
+
+    IEnumerator RotationAnimation()
+    {
+        while (true)
+        {
+            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.Self);
+
+            for (int i = 0; i < 3; i++)
+                yield return null;
+        }
     }
 
     public void Collect()
@@ -29,6 +50,6 @@ public class Coin : MonoBehaviour, ICollectable
 
     private void OnDisable()
     {
-        transform.DOKill();
+        this.StopAllCoroutines();
     }
 }

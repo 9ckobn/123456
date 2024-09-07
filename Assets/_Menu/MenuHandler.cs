@@ -1,45 +1,53 @@
-using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 
-public class MenuHandler : MonoBehaviour, IPointerDownHandler
+public class MenuHandler : MonoBehaviour
 {
     [SerializeField] private TopLayout topLayout;
     [SerializeField] private BottomLayout bottomLayout;
 
     [SerializeField] private DefaultMenuScreen inviteFriendsScreen;
 
-    [SerializeField] private EnergyInfo energyInfo;
-
     [SerializeField] private LevelHandler levelHandler;
+    [SerializeField] private TextMeshProUGUI errorText;
 
     private Screen currentScreen, pastScreen;
 
     private User currentUser;
     private API client;
 
-    public Action<Screen> onScreenChanged;
-
-    [SerializeField] private Image clickablePanel;
+    [SerializeField] private Button playButton;
     public InGameHud GameHud;
-    public bool canPlay;
 
     public long GetUID
     {
         get => currentUser.UID;
     }
 
-    public void GetReward(int amount)
+    public int GetUserCoins
     {
-        Debug.Log($"Yeeapy, your reward is {amount}");
+        get => currentUser.coins;
     }
+
+    public int GetUserMulti
+    {
+        get => currentUser.multiplier;
+    }
+
+    public int GetUserEnergy
+    {
+        get => currentUser.currentEnergy;
+    }
+
 
     public async void StartMenu(User user = null)
     {
+        playButton.gameObject.SetActive(true);
+        playButton.onClick = Play;
+
         GameHud.HideHud();
 
         client = new();
@@ -48,15 +56,16 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
         {
             currentUser = user;
         }
+        else
+        {
+            await UpdateUserAsync(GetUID);
+        }
 
         bottomLayout.Setup(this);
         topLayout.Setup(this);
 
         bottomLayout.ShowLayout();
         topLayout.ShowLayout();
-
-        energyInfo.UpdateEnergy(await client.GetUserParamByNameAsync(GetUID, "currentEnergy"));
-        clickablePanel.enabled = true;
     }
 
 
@@ -70,20 +79,20 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
 
         screen.OpenScreenLazy();
         currentScreen = screen;
-
-        onScreenChanged?.Invoke(currentScreen);
     }
 
     public void OpenInviteFriends()
     {
         inviteFriendsScreen.SetupMenu(this);
-        inviteFriendsScreen.SetupCloseScreen(() => canPlay = true);
+        inviteFriendsScreen.SetupCloseScreen(null);
         inviteFriendsScreen.OpenScreen();
     }
 
-    private void OnDestroy()
+    public async UniTask<User> UpdateUserAsync(long UID)
     {
-        onScreenChanged = null;
+        currentUser = await client.GetUserAsync(UID);
+
+        return currentUser;
     }
 
     public async UniTask<CurrentTasks> GetActiveTasks()
@@ -108,20 +117,13 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
 
     public async UniTask<int> GetLastSessionScore()
     {
-        Debug.Log("getting last score");
         return await client.GetUserParamByNameAsync(GetUID, "lastSessionScore");
     }
 
     public async UniTask<int> GetLastSessionCoins()
     {
-        Debug.Log("getting last coins");
         return await client.GetUserParamByNameAsync(GetUID, "lastSessionCoins");
     }
-
-    // public async UniTask<List<(User user, int rank)>> GetTopUsersByMaxScore()
-    // {
-    //     return await client.GetTopUsersByMaxScoreAsync();
-    // }
 
     public async UniTask<List<(User user, int rank)>> GetTopUsersByParamName(string paramName)
     {
@@ -139,6 +141,16 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
         topLayout.UpdateMoneyCount(rewardAmount);
     }
 
+    public async void UpdateTaskCompletion(int rewardAmount)
+    {
+        Debug.Log("Just get coins");
+
+        await client.UpdateUserDataByParamAsync(GetUID, "coins",
+            await client.GetUserParamByNameAsync(GetUID, "coins") + rewardAmount);
+
+        topLayout.UpdateMoneyCount(rewardAmount);
+    }
+
     //todo remake all requests to creating one json and sending them (now is sending 3 requests with different json's)
     public async UniTask IncreaseMultiplier()
     {
@@ -148,31 +160,58 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
         await client.UpdateAllUserTasksAsync(GetUID, new CurrentTasks());
 
         await client.UpdateUserDataByParamAsync(GetUID, "multiplier", currentUser.multiplier + 1);
+
+        topLayout.UpdateMulti(currentUser.multiplier + 1);
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    public async UniTask<List<User>> GetFriendsAsync()
     {
-        Debug.Log("point");
-        
-        if (canPlay)
-            Play();
+        List<User> list = new List<User>();
+
+        var me = await client.GetUserAsync(GetUID);
+
+        foreach (var friend in me.ReferralFriends)
+        {
+            var user = await client.GetUserAsync(friend.UID);
+            if (user != null)
+                list.Add(user);
+        }
+
+        return list;
     }
 
     private async void Play()
     {
         if (await DecreaseEnergy())
         {
+            playButton.gameObject.SetActive(false);
+
             bottomLayout.HideLayout();
             topLayout.HideLayout();
             inviteFriendsScreen.CloseScreen();
-            clickablePanel.enabled = false;
-            Debug.Log("start running");
 
             levelHandler.Play();
 
             await UniTask.Delay(1000);
 
             GameHud.ShowHud(this);
+        }
+        else
+        {
+            errorText.rectTransform.DOKill();
+            errorText.DOKill();
+            errorText.color = Color.white;
+
+            errorText.rectTransform.anchoredPosition = Vector2.zero;
+            errorText.enabled = true;
+
+            errorText.DOFade(1, 0.5f).OnComplete(() =>
+            {
+                errorText.DOFade(0, 3f).OnComplete(() => errorText.enabled = false);
+            });
+
+            errorText.rectTransform.DOAnchorPosY(errorText.rectTransform.anchoredPosition.y + 200, 3f);
+            errorText.text = "Not enough energy...";
         }
     }
 
@@ -188,16 +227,12 @@ public class MenuHandler : MonoBehaviour, IPointerDownHandler
         int updatedEnergy = currentEnergy - 75;
 
         await client.UpdateUserDataByParamAsync(GetUID, "currentEnergy", updatedEnergy);
-
-        energyInfo.UpdateEnergy(updatedEnergy);
-
         return true;
     }
 
     public async void RestoreEnergy()
     {
         await client.UpdateUserDataByParamAsync(GetUID, "currentEnergy", 1000);
-        energyInfo.UpdateEnergy(1000);
     }
 
     public async void DecreaseCoins(int amount)

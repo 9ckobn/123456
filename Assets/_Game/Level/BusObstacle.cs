@@ -5,6 +5,7 @@ using UnityEngine;
 public class BusObstacle : MonoBehaviour, IObstacle
 {
     public int OnCollideGetDamage() => 2;
+
     public void DisableObstacle()
     {
         this.enabled = false;

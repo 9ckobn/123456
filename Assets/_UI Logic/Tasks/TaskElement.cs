@@ -11,12 +11,12 @@ public class TaskElement : MonoBehaviour
     public void Setup(string text, int rewardAmount)
     {
         taskText.text = text;
-        rewardText.text = $"+{rewardAmount} $CAT";
+        rewardText.text = $"+{rewardAmount} <sprite=0>";
     }
 
     public async UniTask HideTask()
     {
-        await transform.DOMoveX(-500, 0.75f).SetDelay(0.3f).SetEase(Ease.InOutElastic).OnComplete(()=>
+        await transform.DOMoveX(-500, 0.75f).SetDelay(0.3f).SetEase(Ease.InOutElastic).OnComplete(() =>
         {
             gameObject.SetActive(false);
         }).AsyncWaitForCompletion().AsUniTask();

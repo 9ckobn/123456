@@ -1,5 +1,4 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
 
 public class LevelHandler : MonoBehaviour
@@ -10,8 +9,6 @@ public class LevelHandler : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private CameraMovement cameraMovement;
     [SerializeField] private HUD hud;
-
-    [SerializeField] private TextMeshProUGUI FPS_text;
     private float deltaTime;
 
     int totalDamage = 0;
@@ -28,14 +25,12 @@ public class LevelHandler : MonoBehaviour
         player.onGetDamage += (x) => CameraShake();
         player.onGetDamage += AddDamage;
 
-        Application.targetFrameRate = 60;
+        // Application.targetFrameRate = 60;
     }
 
     void Update()
     {
         deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
-
-        FPS_text.text = $"{1.0f / deltaTime}";
     }
 
     public void Play()
@@ -45,8 +40,7 @@ public class LevelHandler : MonoBehaviour
 
     private void CameraShake()
     {
-        cameraMovement.ShakeCamera(cameraShakeDuration, cameraShakeAmplitude);
-        Debug.Log("Shake");
+        // cameraMovement.ShakeCamera(cameraShakeDuration, cameraShakeAmplitude);
     }
 
     private void AddDamage(int amaount)

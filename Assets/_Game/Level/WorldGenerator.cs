@@ -21,10 +21,9 @@ public class WorldGenerator : MonoBehaviour
 
     [SerializeField] private PlatformGenerator platformGenerator;
 
-    [SerializeField] private GameObject startCoins;
-    [SerializeField] private Transform coinsRoot;
-
-    private GameObject currentCoinsInstance = null;
+    [SerializeField] private GameObject startLevelPrefab;
+    [SerializeField] private Vector3 startLevelCoords;
+    [SerializeField] private GameObject currentStartLevelInstance = null;
 
     void Start()
     {
@@ -33,8 +32,8 @@ public class WorldGenerator : MonoBehaviour
         {
             SpawnChunk(chunk);
         }
-        
-        ClearStartCoins();
+
+        ClearStartLevel();
     }
 
     public void ClearLevel()
@@ -48,16 +47,16 @@ public class WorldGenerator : MonoBehaviour
         platformGenerator.ClearPlatforms();
         nextSpawnPosition = Vector3.zero;
         Start();
-        
-        ClearStartCoins();
+
+        ClearStartLevel();
     }
 
-    private void ClearStartCoins()
+    private void ClearStartLevel()
     {
-        if (currentCoinsInstance != null)
-            Destroy(currentCoinsInstance);
+        if (currentStartLevelInstance != null)
+            Destroy(currentStartLevelInstance);
 
-        currentCoinsInstance = Instantiate(startCoins, coinsRoot);
+        currentStartLevelInstance = Instantiate(startLevelPrefab, startLevelCoords, Quaternion.identity, transform);
     }
 
     void Update()

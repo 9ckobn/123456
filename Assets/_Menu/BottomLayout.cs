@@ -24,7 +24,7 @@ public class BottomLayout : MonoBehaviour
         InitializeButtons();
     }
 
-    private async void InitializeButtons()
+    private void InitializeButtons()
     {
         SetButtonActions(profileButton, profileScreen);
         SetButtonActions(tasksButton, taskScreen);
@@ -36,17 +36,17 @@ public class BottomLayout : MonoBehaviour
     {
         if (screen == null)
             return;
-        
+
+        screen.SetupMenu(menu);
+
         button.onClick = () =>
         {
             ClearInteractables();
             menu.OpenScreen(screen);
             button.interactable = false;
-            menu.canPlay = false;
         };
 
-        screen.SetupMenu(menu);
-        screen.SetupCloseScreen(ClearInteractables);
+        screen.SetupCloseScreen(() => { button.interactable = true; });
     }
 
     public void ShowLayout()
@@ -67,17 +67,17 @@ public class BottomLayout : MonoBehaviour
         taskScreen.CloseScreen();
         shopScreen.CloseScreen();
         friendsScreen.CloseScreen();
-        
+
         ClearInteractables();
     }
 
     private void ClearInteractables()
     {
+        Debug.Log("clear");
+
         profileButton.interactable = true;
         tasksButton.interactable = true;
         shopButton.interactable = true;
         friendsButton.interactable = true;
-
-        menu.canPlay = true;
     }
 }

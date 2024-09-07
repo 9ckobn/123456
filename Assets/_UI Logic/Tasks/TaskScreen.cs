@@ -11,12 +11,11 @@ using Random = System.Random;
 
 public class TaskScreen : DefaultMenuScreen
 {
-    [Range(1, 30)] private int currentLevel = 1;
     [SerializeField] private List<Task> currentTasks = new List<Task>();
     [SerializeField] private RectTransform taskRoot;
     [SerializeField] private TaskElement defaultPrefab;
-    [SerializeField] private TaskElement prefabWithButton;
-    
+    [SerializeField] private TaskElementWithButton prefabWithButton;
+
     [SerializeField] private Image loadingImage;
     [SerializeField] private GameObject levelUpPopUp;
     [SerializeField] private TextMeshProUGUI levelsText;
@@ -35,18 +34,12 @@ public class TaskScreen : DefaultMenuScreen
 
     private void Awake()
     {
-        levels.onClick = async () =>
-        {
-            await SwitchCategory(true);
-        };
+        levels.onClick = () => { SwitchCategory(true); };
 
-        partners.onClick = async () =>
-        {
-            await SwitchCategory(false);
-        };
+        partners.onClick = () => { SwitchCategory(false); };
     }
 
-    private async UniTask SwitchCategory(bool isLevelTasks)
+    private void SwitchCategory(bool isLevelTasks)
     {
         levels.interactable = !isLevelTasks;
         partners.interactable = isLevelTasks;
@@ -58,30 +51,30 @@ public class TaskScreen : DefaultMenuScreen
     {
         ClearExistingTaskPrefabs();
         multiplier = await menu.GetCurrentMultiplier();
+        UpdateLevelText();
         levelTask = isLevelTasks;
 
         if (levelTask)
         {
             await SetupAndInitializeGameTasks();
+            if (currentActiveTasks.All(x => x.IsCompleted))
+            {
+                await HandleLevelUp();
+                await SetupAndInitializeGameTasks();
+            }
         }
         else
         {
             await LoadExternalTasksAndInitialize();
         }
 
-        if (currentActiveTasks.All(x => x.IsCompleted))
-        {
-            await HandleLevelUp();
-            await SetupAndInitializeGameTasks();
-        }
-        
         HideLoadingAnimation();
         taskRoot.ForceUpdateRectTransforms();
     }
 
     public async UniTask SetupAndInitializeGameTasks()
     {
-        multiplier = await menu.GetCurrentMultiplier();
+        multiplier = menu.GetUserMulti;
         currentTasks = LoadTasks();
         if (!currentTasks.Any()) GenerateNewTasks();
 
@@ -93,13 +86,20 @@ public class TaskScreen : DefaultMenuScreen
 
     private async UniTask LoadExternalTasksAndInitialize()
     {
-        currentUser = await client.GetUserAsync(menu.GetUID);
-        var watchUrls = await FetchFilteredUrlsAsync("watchurl", currentUser.AlreadyDoneUrls);
+        currentUser = await menu.UpdateUserAsync(menu.GetUID);
+        var watchUrls =
+            await FetchFilteredUrlsAsync("watchurl", currentUser.AlreadyDoneUrls); //todo change to get only list
         var subscribeUrls = await FetchFilteredUrlsAsync("subscribeurl", currentUser.AlreadyDoneUrls);
 
         currentTasks = watchUrls.Select(url => GenerateExternalTask(TaskType.WatchUrl, url))
             .Concat(subscribeUrls.Select(url => GenerateExternalTask(TaskType.SubscribeUrl, url)))
             .ToList();
+
+        if (currentTasks.Count == 0)
+        {
+            Debug.Log("here must be some text");
+            return;
+        }
 
         InitializeActiveTasks();
     }
@@ -107,7 +107,10 @@ public class TaskScreen : DefaultMenuScreen
     public List<Task> LoadTasks()
     {
         string json = PlayerPrefs.GetString(TasksKey, "[]");
-        return JsonConvert.DeserializeObject<List<Task>>(json);
+        return JsonConvert.DeserializeObject<List<Task>>(json, new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        });
     }
 
     private async UniTask<string[]> FetchFilteredUrlsAsync(string endpoint, List<string> alreadyDoneUrls)
@@ -116,7 +119,7 @@ public class TaskScreen : DefaultMenuScreen
         return allUrls.Except(alreadyDoneUrls).ToArray();
     }
 
-    public override async void OpenScreenLazy()
+    public override void OpenScreenLazy()
     {
         client = new API();
         base.OpenScreen();
@@ -128,11 +131,9 @@ public class TaskScreen : DefaultMenuScreen
     private async UniTask UpdateTasksProgress()
     {
         await UniTask.Delay(100);
-        
+
         foreach (var task in currentActiveTasks)
         {
-            if (task.IsCompleted) continue;
-
             int value = task.Type switch
             {
                 TaskType.CollectXCoins => await menu.GetLastSessionCoins(),
@@ -152,7 +153,15 @@ public class TaskScreen : DefaultMenuScreen
         task.IsCompleted = true;
         task.OnComplete?.Invoke();
         int taskIndex = currentActiveTasks.IndexOf(task);
-        menu.UpdateTaskCompletion(taskIndex, task.RewardAmount);
+        
+        if (task.Type != TaskType.WatchUrl && task.Type != TaskType.SubscribeUrl)
+        {
+            menu.UpdateTaskCompletion(taskIndex, task.RewardAmount);
+        }
+        else
+        {
+            menu.UpdateTaskCompletion(task.RewardAmount);
+        }
     }
 
     private void ClearExistingTaskPrefabs()
@@ -162,6 +171,7 @@ public class TaskScreen : DefaultMenuScreen
             child.DOKill();
             Destroy(child.gameObject);
         }
+
         currentActiveTasks.Clear();
     }
 
@@ -193,7 +203,10 @@ public class TaskScreen : DefaultMenuScreen
 
     public void SaveTasks(List<Task> tasks)
     {
-        string json = JsonConvert.SerializeObject(tasks);
+        string json = JsonConvert.SerializeObject(tasks, new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All
+        });
         PlayerPrefs.SetString(TasksKey, json);
         PlayerPrefs.Save();
     }
@@ -202,7 +215,7 @@ public class TaskScreen : DefaultMenuScreen
     {
         levels.SetInteractableWithoutChangeGraphic(false);
         partners.SetInteractableWithoutChangeGraphic(false);
-        
+
         loadingImage.rectTransform.DOKill();
         loadingImage.enabled = true;
         loadingImage.rectTransform.DORotate(new Vector3(0, 0, 90), 0.1f)
@@ -232,22 +245,39 @@ public class TaskScreen : DefaultMenuScreen
             if (task == null) continue;
 
             currentActiveTasks.Add(task);
-            var prefab = task.Type == TaskType.SubscribeUrl || task.Type == TaskType.WatchUrl
-                ? prefabWithButton
-                : defaultPrefab;
 
-            var go = Instantiate(prefab, taskRoot);
-            go.transform.localScale = Vector3.zero;
-            go.Setup(ReplaceX(task.TaskText, task.action.totalValue), task.RewardAmount);
-            go.transform.DOScale(Vector3.one, 0.5f);
-
-            task.OnComplete = async () =>
+            if (task.Type == TaskType.SubscribeUrl || task.Type == TaskType.WatchUrl)
             {
-                await go.HideTask();
-                menu.GetReward(task.RewardAmount);
-                RemoveTask(task);
-                if (!levelTask) await client.AddUrlToUserAsync(menu.GetUID, task.TaskUrl);
-            };
+                var go = Instantiate(prefabWithButton, taskRoot);
+
+                go.transform.localScale = Vector3.zero;
+                go.Setup(ReplaceX(task.TaskText, task.action.totalValue), task.RewardAmount, task.TaskUrl,
+                    () => CompleteTask(task));
+
+                task.OnComplete = async () =>
+                {
+                    await go.HideTask();
+                    RemoveTask(task);
+                    if (!levelTask) await client.AddUrlToUserAsync(menu.GetUID, task.TaskUrl);
+                };
+
+                go.transform.DOScale(Vector3.one, 0.5f);
+            }
+            else
+            {
+                var go = Instantiate(defaultPrefab, taskRoot);
+                go.transform.localScale = Vector3.zero;
+                go.Setup(ReplaceX(task.TaskText, task.action.totalValue), task.RewardAmount);
+
+                go.transform.DOScale(Vector3.one, 0.5f);
+
+                task.OnComplete = async () =>
+                {
+                    await go.HideTask();
+                    RemoveTask(task);
+                    if (!levelTask) await client.AddUrlToUserAsync(menu.GetUID, task.TaskUrl);
+                };
+            }
         }
     }
 
@@ -274,7 +304,7 @@ public class TaskScreen : DefaultMenuScreen
             },
             TaskText = $"{randomType}",
             IsCompleted = false,
-            RewardAmount = random.Next(10, 100)
+            RewardAmount = random.Next(100, 300) * multi
         };
     }
 
@@ -285,13 +315,14 @@ public class TaskScreen : DefaultMenuScreen
             Type = type,
             action = type switch
             {
-                TaskType.WatchUrl => new WatchUrl(url),
-                TaskType.SubscribeUrl => new SubscribeUrl(url),
+                TaskType.WatchUrl => new WatchUrl(),
+                TaskType.SubscribeUrl => new SubscribeUrl(),
                 _ => throw new ArgumentOutOfRangeException()
             },
-            TaskText = $"{type}: {url}",
+            TaskText = $"{url}",
+            TaskUrl = url,
             IsCompleted = false,
-            RewardAmount = 50
+            RewardAmount = 11500 
         };
     }
 

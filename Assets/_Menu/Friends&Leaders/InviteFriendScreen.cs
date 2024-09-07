@@ -44,7 +44,7 @@ public class InviteFriendScreen : DefaultMenuScreen
 
     private void SetAndShareInviteUrl()
     {
-        string referralUrl = $"https://t.me/test_catflip_bot/gameapp?startapp=referral_{menu.GetUID}";
+        string referralUrl = $"https://t.me/CatFlipPlay_Bot/gameapp?startapp=referral_{menu.GetUID}";
         string welcomeMessage =
             "\ud83d\ude3b Catflip: Unleash, Play, Earn - Where Every Game Leads to an Airdrop Adventure!\n\ud83d\ude80 Let's play-to-earn airdrop right now!";
         string encodedMessage = Uri.EscapeDataString(welcomeMessage);
@@ -55,7 +55,6 @@ public class InviteFriendScreen : DefaultMenuScreen
 #else
         Application.OpenURL(url);
 #endif
-        
     }
 
     [DllImport("__Internal")]

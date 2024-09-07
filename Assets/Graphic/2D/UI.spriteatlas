@@ -1,0 +1,142 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 2
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 65
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 0
+      enableAlphaDilation: 1
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 4069b412dc5a3144682483d39a6c4e0c, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: dd4c8cc0b75705f4f8cd091616e47331, type: 3}
+  - {fileID: 21300000, guid: 07d80c2229f028d458f4e1342d77e96e, type: 3}
+  - {fileID: 21300000, guid: 7c4a5f7253146a54dab1b299de2696fb, type: 3}
+  - {fileID: 21300000, guid: f5282d0338d23e247a4367c5847bddf6, type: 3}
+  - {fileID: 21300000, guid: 5bad6e13e96d6f146b06a74422d1482e, type: 3}
+  - {fileID: 21300000, guid: b916f4e33274e7643ad43794fb384d69, type: 3}
+  - {fileID: 21300000, guid: d8ff76f3d2efdcd47b2c88dbd4475ba2, type: 3}
+  - {fileID: 21300000, guid: 2f4c46244f2d4d9489ad212e14e9ef63, type: 3}
+  - {fileID: 21300000, guid: 71100d34a0939b642b2a452c375c8119, type: 3}
+  - {fileID: 21300000, guid: e6f9265469082dc4ea7b372374bf1b18, type: 3}
+  - {fileID: 21300000, guid: 96cc4a746f898bf45a7fcc3447764de4, type: 3}
+  - {fileID: 21300000, guid: cf90e415343c4174fad1fcc142f77a45, type: 3}
+  - {fileID: 21300000, guid: 6a29c146277885f4c8d9cec888752892, type: 3}
+  - {fileID: 21300000, guid: 8b5cd1662582bc74aa6326616450b11a, type: 3}
+  - {fileID: 21300000, guid: 403169b6bfb9dc141abdb000723db098, type: 3}
+  - {fileID: 21300000, guid: 4f779c38078f7ca43b4aae07d6ab6dcd, type: 3}
+  - {fileID: 21300000, guid: dd3df1192573fec40a29010e8d8bcb54, type: 3}
+  - {fileID: 21300000, guid: 4649ba29adc290044866cd36587016d9, type: 3}
+  - {fileID: 21300000, guid: 0f10fba97a197564590a0ab44ac0780c, type: 3}
+  - {fileID: 21300000, guid: 739abfa9979477a43b533fd2197d1ba0, type: 3}
+  - {fileID: 365091539, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -1560614052, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -2063811734, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -697457118, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -1115296363, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -1729528884, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -276062142, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: -1175191985, guid: 421631f9068669c4f81b4a44e1b967ff, type: 3}
+  - {fileID: 21300000, guid: c13cef3aeb072e444a4100aca7f1097d, type: 3}
+  - {fileID: 21300000, guid: 88cfbbea7f669814ba88ddc96f6138bb, type: 3}
+  - {fileID: 21300000, guid: 676ef62b0eef0474d8539cdc1b9cdf17, type: 3}
+  - {fileID: 21300000, guid: 7d6f432ced7cbea499980393c3f17643, type: 3}
+  - {fileID: 21300000, guid: 747c913c23e514a4a9fd85d187908d20, type: 3}
+  - {fileID: 21300000, guid: aa025b4c0f8d08047ad96d79d45e4405, type: 3}
+  - {fileID: 21300000, guid: 75ac050d6e008514db3875894201bdc6, type: 3}
+  - {fileID: 21300000, guid: 7d921e2d8313f52419c35e00a085e8b0, type: 3}
+  - {fileID: 21300000, guid: e9a9417d3fce55c4bab4ab56844cd00b, type: 3}
+  - {fileID: 21300000, guid: 427496bd10f6c9a4b8476b99b5c896e5, type: 3}
+  - {fileID: 21300000, guid: 4097ef2e1ce0ea94ab602502184d1bfe, type: 3}
+  - {fileID: 21300000, guid: 59eb0b8e50a11e44185d306d8fa1c020, type: 3}
+  - {fileID: 21300000, guid: 2d7d329e3081d1a4499d9db3ab9ddedf, type: 3}
+  - {fileID: 21300000, guid: 0581f3cebe7bf3945b4fd633fdd742fb, type: 3}
+  - {fileID: 21300000, guid: 4c1d61cfab3f8a348b7d429e66b615fa, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - telegram
+  - Frame 215(4)
+  - Frame 141
+  - solar_star-rainbow-bold-duotone (2)(2)
+  - Frame 217(1)
+  - Frame 215(5)
+  - 3d------------------------------- 1
+  - youtube
+  - Group 19255(1)
+  - Vector(1)
+  - Frame 215(3)
+  - Ico=Off
+  - Ellipse 85
+  - solar_user-plus-bold
+  - popup(1)
+  - Frame 215(2)
+  - tp_element
+  - solar_star-rainbow-bold-duotone (2)
+  - Frame 118
+  - Frame 140
+  - profile_inactive
+  - profile_active
+  - community_active
+  - community_inactive
+  - tasks_active
+  - tasks_inactive
+  - shop_inactive
+  - shop_active
+  - Vector
+  - BaseScreen
+  - ic_baseline-telegram
+  - Frame 215
+  - Frame 156 (1) 1
+  - bottom_frame
+  - a-cat-in-headphones-and-sneakers-is-a-character-in (2)
+  - Switch(1)
+  - ------------------------------------ 1
+  - Vector(2)
+  - Frame 156 (1) 1(2)
+  - Frame 134
+  - Switch
+  - twitter
+  - Frame 217
+  m_RenderDataMap: {}
+  m_Tag: UI
+  m_IsVariant: 0

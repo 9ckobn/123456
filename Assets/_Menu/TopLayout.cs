@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -6,20 +7,42 @@ using UnityEngine;
 public class TopLayout : MonoBehaviour
 {
     [SerializeField] private Button addCoins;
-    [SerializeField] private TextMeshProUGUI moneyCounter;
+    [SerializeField] private TextMeshProUGUI moneyCounter, multiCounter;
 
     [SerializeField] private Button settingsButton;
-    [SerializeField] private Screen settingsScreen;
+    [SerializeField] private DefaultMenuScreen settingsScreen;
+
+    [SerializeField] private Button showEnergyInfoButton;
+    [SerializeField] private EnergyInfo energyInfo;
 
     private int coinsAmount = 0;
 
-    public async void Setup(MenuHandler menu)
+    public void Setup(MenuHandler menu)
     {
         moneyCounter.text = "Loading...";
+        multiCounter.text = "Loading...";
 
-        coinsAmount = await menu.GetCurrentCoins();
+        settingsButton.onClick = () => menu.OpenScreen(settingsScreen);
 
-        moneyCounter.text = $"<sprite=0>{coinsAmount}";
+        energyInfo.GetRect.sizeDelta = new Vector2(0, 100);
+
+        showEnergyInfoButton.onClick = async () =>
+        {
+            energyInfo.GetRect.sizeDelta = new Vector2(0, 100);
+            energyInfo.GetRect.anchoredPosition = Vector2.zero;
+            energyInfo.GetRect.DOSizeDelta(new Vector2(600, 100), 0.3f);
+            energyInfo.GetRect.DOAnchorPosX(300, 0.3f);
+
+            energyInfo.UpdateEnergy(menu.GetUserEnergy);
+            showEnergyInfoButton.interactable = false;
+            await UniTask.Delay(1600);
+            showEnergyInfoButton.interactable = true;
+        };
+
+        coinsAmount = menu.GetUserCoins;
+
+        UpdateMulti(menu.GetUserMulti);
+        moneyCounter.text = $"{coinsAmount} <sprite=0>";
     }
 
     public void UpdateMoneyCount(int amount)
@@ -27,9 +50,14 @@ public class TopLayout : MonoBehaviour
         StartCoroutine(CounterAnimation(amount));
     }
 
+    public void UpdateMulti(int amount)
+    {
+        multiCounter.text = $"X{amount}";
+    }
+
     private IEnumerator CounterAnimation(int totalCoins)
     {
-        moneyCounter.text = $"<sprite=0>{coinsAmount}";
+        moneyCounter.text = $"{coinsAmount} <sprite=0>";
 
         yield return new WaitForSeconds(1);
 
@@ -41,14 +69,14 @@ public class TopLayout : MonoBehaviour
         while (t < duration)
         {
             currentCoins = (int)Mathf.Lerp(coinsAmount, coinsAmount + totalCoins, t / duration);
-            moneyCounter.text = $"<sprite=0>{currentCoins}";
+            moneyCounter.text = $"{currentCoins} <sprite=0>";
 
             t += Time.deltaTime;
 
             yield return null;
         }
 
-        moneyCounter.text = $"<sprite=0>{ coinsAmount + totalCoins}";
+        moneyCounter.text = $"{coinsAmount + totalCoins} <sprite=0>";
         coinsAmount += totalCoins;
     }
 

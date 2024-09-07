@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +10,36 @@ public class TryAgainScreen : Screen
     public Action onTimeEnded;
     public Image timerImage;
 
+    [SerializeField] private TextMeshProUGUI scoreAmountTmpro, coinsAmountTmpro;
+
     public Button saveMe;
 
     public override void OpenScreenLazy()
     {
         OpenScreen();
+    }
+
+    public void SetupScreen(int coins, int score, Action onTimeEnded, Action<int> onDecreaseMoney, Action onPlayerSave)
+    {
+        scoreAmountTmpro.text = score.ToString();
+        coinsAmountTmpro.text = coins.ToString();
+        this.onTimeEnded = onTimeEnded;
+
+        if (onDecreaseMoney == null)
+        {
+            CloseScreen();
+            this.onTimeEnded?.Invoke();
+        }
+        else
+        {
+            OpenScreen();
+            saveMe.onClick = () =>
+            {
+                onDecreaseMoney.Invoke(300);
+                CloseScreen();
+                onPlayerSave?.Invoke();
+            };
+        }
     }
 
     public override void CloseScreen()

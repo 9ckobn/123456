@@ -11,7 +11,7 @@ public class ProfileScreen : DefaultMenuScreen
     public override async void OpenScreenLazy()
     {
         openFriendsInviteScreen.onClick = menu.OpenInviteFriends;
-        
+
         base.OpenScreenLazy();
 
         maxScoreTmp.text = $"max score\n loading...";
@@ -24,6 +24,6 @@ public class ProfileScreen : DefaultMenuScreen
 
         maxScoreTmp.text = $"max score\n{maxScore}";
         coinsAmountTmp.text = $"{coins}";
-        multiplierTmp.text = $"x{multi}";
+        multiplierTmp.text = $" Level x{multi}";
     }
 }

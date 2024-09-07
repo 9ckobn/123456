@@ -35,7 +35,7 @@ public class User
         Nickname = nickname;
         IsPremium = isPremium;
         CanBeReferral = canBeReferral;
-        
+
         Inventory = new();
     }
 }

@@ -19,28 +19,22 @@ public class LoadingScreen : MonoBehaviour
     public void OpenScreen(Action onScreenReady = null)
     {
         StopAllCoroutines();
-        
+
         gameObject.SetActive(true);
         _loadingScreenAnimation.gameObject.SetActive(true);
 
         _loadingScreenAnimation.onScreenReady = onScreenReady;
 
-        if (!instantOpen)
-        {
-            _loadingScreenAnimation.OpenScreen();
-        }
-        else
-        {
-            _loadingScreenAnimation.OpenScreenInstant();
-        }
-        
+        _loadingScreenAnimation.OpenScreen();
+
+
         StartCoroutine(Timer());
     }
 
     IEnumerator Timer()
     {
         yield return new WaitForSeconds(1.5f);
-        _loadingScreenAnimation.CloseScreenScale();
+        _loadingScreenAnimation.CloseScreen();
         yield break;
     }
 }

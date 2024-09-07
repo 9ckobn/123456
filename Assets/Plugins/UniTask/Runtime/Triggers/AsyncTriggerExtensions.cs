@@ -9,7 +9,6 @@ namespace Cysharp.Threading.Tasks
     public static class UniTaskCancellationExtensions
     {
 #if UNITY_2022_2_OR_NEWER
-
         /// <summary>This CancellationToken is canceled when the MonoBehaviour will be destroyed.</summary>
         public static CancellationToken GetCancellationTokenOnDestroy(this MonoBehaviour monoBehaviour)
         {
@@ -99,4 +98,3 @@ namespace Cysharp.Threading.Tasks.Triggers
         }
     }
 }
-

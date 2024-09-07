@@ -51,7 +51,7 @@ public class PlatformGenerator : MonoBehaviour
         // Перемещаем платформы вперед
         GameObject firstPlatform = platforms[0];
         platforms.RemoveAt(0);
-        
+
         // Перемещаем первую платформу вперед и добавляем её в конец списка
         float newZPosition = platforms[platforms.Count - 1].transform.position.z + platformLength;
         firstPlatform.transform.position = new Vector3(0f, 0.21f, newZPosition);

@@ -1,51 +1,60 @@
 using System;
 using System.Web;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class HUD : MonoBehaviour
 {
-    [Header("InGame")]
-    [SerializeField] private LoseScreen loseScreen;
+    [Header("InGame")] [SerializeField] private LoseScreen loseScreen;
     [SerializeField] private TryAgainScreen tryAgainScreen;
 
     [SerializeField] private WorldGenerator worldGenerator;
     [SerializeField] private Player player;
 
-    [Header("Menu")] 
-    [SerializeField] private MenuHandler menu;
-    
-    public async void ShowTryAgainScreen(int score, int coins)
+    [Header("Menu")] [SerializeField] private MenuHandler menu;
+
+    public async void ShowTryAgainScreen(float scoreRaw, int coins)
     {
+        int score = Mathf.FloorToInt(player.transform.position.z * menu.GetUserMulti);
+
         var client = new API();
         long uid = menu.GetUID;
 
-        int pastCoins = await client.GetUserParamByNameAsync(uid, "coins");
+        int pastCoins = await menu.GetCurrentCoins();
 
-        await client.UpdateUserDataByParamAsync(uid, "lastSessionCoins", coins);
-        await client.UpdateUserDataByParamAsync(uid, "lastSessionScore", score);
-        
-        await client.UpdateUserDataByParamAsync(uid, "coins", coins + pastCoins);
 
-        if (await client.GetUserParamByNameAsync(uid, "maxScore") < score)
+        loseScreen.SetupScreen(coins, score, async () =>
         {
-            await client.UpdateUserDataByParamAsync(uid, "maxScore", score);
-        }
+            await client.UpdateUserDataByParamAsync(uid, "lastSessionCoins", coins);
+            await client.UpdateUserDataByParamAsync(uid, "lastSessionScore", score);
 
-        loseScreen.SetupScreen(coins, score, ()=>
-        {
+            await client.UpdateUserDataByParamAsync(uid, "coins", coins + pastCoins);
+
+            if (await client.GetUserParamByNameAsync(uid, "maxScore") < score)
+            {
+                await client.UpdateUserDataByParamAsync(uid, "maxScore", score);
+            }
+
             player.ClearPlayer();
             worldGenerator.ClearLevel();
             loseScreen.CloseScreen();
             menu.StartMenu();
         });
 
-        tryAgainScreen.onTimeEnded =()=>
+
+        tryAgainScreen.SetupScreen(player.AddCoin, Mathf.FloorToInt(player.transform
+            .position.z * menu.GetUserMulti), () =>
         {
             menu.GameHud.HideHud();
             ShowLoseScreen();
-        };
-        tryAgainScreen.OpenScreen();
+        }, pastCoins - 300 < 0 ? null : TryDecreaseMoney, player.ClearPlayerWithoutRestart);
     }
+
+    private void TryDecreaseMoney(int amount)
+    {
+        menu.DecreaseCoins(amount);
+    }
+
 
     public void ShowLoseScreen()
     {

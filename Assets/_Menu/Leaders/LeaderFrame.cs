@@ -21,7 +21,7 @@ public class LeaderFrame : MonoBehaviour
 
         if (myCard)
         {
-            mainFrame.sprite = activeFrame;
+            mainFrame.color = Color.magenta;
             nickname.color = Color.white;
             this.score.color = Color.white;
         }

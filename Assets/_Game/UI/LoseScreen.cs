@@ -3,15 +3,14 @@ using System.Collections;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class LoseScreen : Screen
 {
-    [SerializeField] private Camera uiCamera;
-    private Camera mainCamera;
-
     [SerializeField] private UnityEngine.UI.Button goToStartMenuButton;
 
     [SerializeField] private TextMeshProUGUI scoreText, coinsText;
+    [SerializeField] private RectTransform playerIcon;
 
     private int coinsAmount, scoreAmount;
 
@@ -24,29 +23,30 @@ public class LoseScreen : Screen
 
     public override void CloseScreen()
     {
-        scoreText.text = $"{0}";
-        coinsText.text = $"{0}";
+        scoreText.text = $"Score: {0}";
+        coinsText.text = $"Coins: {0}";
         gameObject.SetActive(false);
-        mainCamera.gameObject.SetActive(true);
-        uiCamera.gameObject.SetActive(false);
     }
 
     public void SetupScreen(int coins, int score, Action onClick)
     {
-        mainCamera = Camera.main;
-        
         coinsAmount = coins;
         scoreAmount = score;
 
         loadingScreen.instantOpen = false;
-        goToStartMenuButton.onClick.AddListener(() => loadingScreen.OpenScreen(onClick));
+        goToStartMenuButton.onClick.AddListener(() =>
+        {
+            loadingScreen.OpenScreen(onClick);
+            goToStartMenuButton.onClick.RemoveAllListeners();
+        });
+
+        playerIcon.anchoredPosition = new Vector2(-3000, 0);
+        playerIcon.DOAnchorPosX(0, 2f);
     }
 
     public override Screen OpenScreen()
     {
         transform.localScale = Vector3.zero;
-        mainCamera.gameObject.SetActive(false);
-        uiCamera.gameObject.SetActive(true);
 
         gameObject.SetActive(true);
 
@@ -59,8 +59,8 @@ public class LoseScreen : Screen
 
     private IEnumerator CounterAnimation()
     {
-        scoreText.text = $"{0}";
-        coinsText.text = $"{0}";
+        scoreText.text = $"Score: {0}";
+        coinsText.text = $"Coins: {0}";
 
         yield return new WaitForSeconds(1);
 
@@ -75,15 +75,15 @@ public class LoseScreen : Screen
             currentCoins = (int)Mathf.Lerp(0, coinsAmount, t / duration);
             currentScore = (int)Mathf.Lerp(0, scoreAmount, t / duration);
 
-            scoreText.text = $"{currentScore}";
-            coinsText.text = $"{currentCoins}";
+            scoreText.text = $"Score: {currentScore}";
+            coinsText.text = $"Coins: {currentCoins}";
 
             t += Time.deltaTime;
 
             yield return null;
         }
 
-        scoreText.text = $"{scoreAmount}";
-        coinsText.text = $"{coinsAmount}";
+        scoreText.text = $"Score: {scoreAmount}";
+        coinsText.text = $"Coins: {coinsAmount}";
     }
 }

@@ -14,10 +14,13 @@ namespace Cysharp.Threading.Tasks
     {
         /// <summary>The operation has not yet completed.</summary>
         Pending = 0,
+
         /// <summary>The operation completed successfully.</summary>
         Succeeded = 1,
+
         /// <summary>The operation completed with an error.</summary>
         Faulted = 2,
+
         /// <summary>The operation completed due to cancellation.</summary>
         Canceled = 3
     }
@@ -35,7 +38,6 @@ namespace Cysharp.Threading.Tasks
         UniTaskStatus UnsafeGetStatus(); // only for debug use.
 
 #if SUPPORT_VALUETASK
-
         System.Threading.Tasks.Sources.ValueTaskSourceStatus System.Threading.Tasks.Sources.IValueTaskSource.GetStatus(short token)
         {
             return (System.Threading.Tasks.Sources.ValueTaskSourceStatus)(int)((IUniTaskSource)this).GetStatus(token);
@@ -63,7 +65,6 @@ namespace Cysharp.Threading.Tasks
         new T GetResult(short token);
 
 #if SUPPORT_VALUETASK
-
         new public UniTaskStatus GetStatus(short token)
         {
             return ((IUniTaskSource)this).GetStatus(token);
@@ -124,4 +125,3 @@ namespace Cysharp.Threading.Tasks
         }
     }
 }
-

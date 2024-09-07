@@ -106,6 +106,8 @@ public class Bootstrapper : MonoBehaviour
                 Debug.Log("User not found, creating a new one...");
                 currentUser = await client.CreateUserAsync(user.id, user.username, user.is_premium,
                     !string.IsNullOrEmpty(userDataRaw.referral));
+                
+                PlayerPrefs.DeleteAll();
             }
             catch (Exception e)
             {
@@ -131,6 +133,22 @@ public class Bootstrapper : MonoBehaviour
             currentUser.CanBeReferral = false;
             await client.UpdateUserDataByParamAsync(currentUser.UID, "CanBeReferral", false);
             await client.AddReferralFriendAsync(referralId, new ReferralFriend(currentUser.UID, currentUser.IsPremium));
+
+            if (currentUser.IsPremium)
+            {
+                await client.UpdateUserDataByParamAsync(referralId, "coins",
+                    menu.GetUserCoins + 15500);
+                await client.UpdateUserDataByParamAsync(currentUser.UID, "coins",
+                    menu.GetUserCoins + 15500);
+            }
+            else
+            {
+                await client.UpdateUserDataByParamAsync(referralId, "coins",
+                    menu.GetUserCoins + 5500);
+                await client.UpdateUserDataByParamAsync(currentUser.UID, "coins",
+                    menu.GetUserCoins + 5500);
+            }
+
             Debug.Log("Referral data updated successfully.");
         }
         else

@@ -31,6 +31,7 @@ public class ShopScreen : DefaultMenuScreen
         }
 
         menu.DecreaseCoins(500);
+        menu.UpdateUserAsync(menu.GetUID);
 
         onBuyComplete?.Invoke();
         ShowStatus(true);
@@ -38,14 +39,14 @@ public class ShopScreen : DefaultMenuScreen
 
     private void ShowStatus(bool status)
     {
-        statusText.text = status? "Successful" : "Error...";
+        statusText.text = status ? "Successful" : "Error...";
         StatusAnimation();
     }
 
     private void StatusAnimation()
     {
         var seq = DOTween.Sequence();
-        
+
         statusText.rectTransform.anchoredPosition = Vector2.zero;
 
         seq.Append(statusText.DOFade(1, 1f));

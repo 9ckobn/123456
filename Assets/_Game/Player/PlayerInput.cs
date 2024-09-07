@@ -35,7 +35,6 @@ public class PlayerInput : MonoBehaviour
             case ControlType.SwipeDown:
                 OnRoll();
                 break;
-
         }
     }
 
@@ -45,14 +44,17 @@ public class PlayerInput : MonoBehaviour
         {
             OnTurnTo(true);
         }
+
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             OnTurnTo(false);
         }
+
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             OnJump();
         }
+
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             OnRoll();

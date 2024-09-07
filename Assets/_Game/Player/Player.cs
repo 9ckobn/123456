@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -72,7 +71,7 @@ public class Player : MonoBehaviour
     private readonly int animIdleHash = Animator.StringToHash("idle");
 
     public Action<int> onGetDamage;
-    public Action<Action<int, int>> onDeath;
+    public Action<Action<float, int>> onDeath;
 
     public bool IsGrounded => Physics.CheckSphere(groundCheckTransform.position, checkRadius, groundMask);
     public bool IsInAir => isInAir;
@@ -98,6 +97,8 @@ public class Player : MonoBehaviour
 
     [SerializeField] private ParticleSystem collectFx;
 
+    public static Player instance;
+
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
@@ -106,10 +107,8 @@ public class Player : MonoBehaviour
         inputReader = GetComponent<PlayerInput>();
         playerTransform = GetComponent<Transform>();
 
-        colliderCenterOnStart = characterController.center;
-        colliderHeightOnStart = characterController.height;
-        colliderCenterOnRoll = new Vector3(characterController.center.x, characterController.center.y / 2,
-            characterController.center.z);
+
+        instance = this;
     }
 
     private void OnEnable()
@@ -122,6 +121,11 @@ public class Player : MonoBehaviour
         OnFall += HandleOnFall;
 
         onDeath += SetDeath;
+
+        colliderCenterOnStart = characterController.center;
+        colliderHeightOnStart = characterController.height;
+        colliderCenterOnRoll = new Vector3(characterController.center.x, characterController.center.y / 2,
+            characterController.center.z);
     }
 
     private void Start()
@@ -133,7 +137,9 @@ public class Player : MonoBehaviour
     public void StartRun()
     {
         blockRunning = false;
+        animator.ResetTrigger(animRunStartHash);
         animator.SetTrigger(animRunStartHash);
+        animator.SetFloat(animRunHash, currentRunSpeed / 10);
     }
 
     public void ClearPlayer()
@@ -141,7 +147,7 @@ public class Player : MonoBehaviour
         transform.position = new Vector3(0, 0.44f, 10);
         animator.SetBool(animBoolIsGrounded, true);
         animator.ResetTrigger(animHitHash);
-        
+
         levelCoins = 0;
         blockRunning = true;
         currentRunSpeed = 0;
@@ -152,6 +158,32 @@ public class Player : MonoBehaviour
         characterController.enabled = true;
         characterController.detectCollisions = true;
         inputReader.enabled = true;
+    }
+
+    public void ClearPlayerWithoutRestart()
+    {
+        animator.SetBool(animBoolIsGrounded, true);
+        animator.ResetTrigger(animHitHash);
+
+        blockRunning = false;
+        characterController.enabled = true;
+        characterController.detectCollisions = true;
+        inputReader.enabled = true;
+
+        RaycastHit[] hits;
+        hits = Physics.SphereCastAll(transform.position, 50, transform.forward, 10);
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider.TryGetComponent(out IObstacle obstacle))
+            {
+                hit.collider.gameObject.SetActive(false);
+            }
+        }
+
+        SideMove(pastLane);
+
+        animator.CrossFadeInFixedTime(animRollHash, animationFadeTime);
     }
 
     private void Update()
@@ -251,7 +283,7 @@ public class Player : MonoBehaviour
         if (sideMovesCoroutine != null)
             StopCoroutine(sideMovesCoroutine);
 
-        sideMovesCoroutine = StartCoroutine(MoveOnRightAxis(targetX, 2));
+        sideMovesCoroutine = StartCoroutine(MoveOnRightAxis(targetX, 1.2f));
     }
 
     private IEnumerator MoveOnRightAxis(float xPosition, float speed)
@@ -298,7 +330,7 @@ public class Player : MonoBehaviour
 
         Jump(jumpForce);
         animator.SetBool(animBoolIsGrounded, false);
-        animator.CrossFadeInFixedTime(animJumpHash, animationFadeTime);
+        animator.CrossFadeInFixedTime(animJumpHash, animationFadeTime / 2);
     }
 
     private void Jump(float jumpHeight)
@@ -331,7 +363,7 @@ public class Player : MonoBehaviour
         isRolling = false;
     }
 
-    private async void SetDeath(Action<int, int> onDeathDone)
+    private async void SetDeath(Action<float, int> onDeathDone)
     {
         blockRunning = true;
         characterController.enabled = false;
@@ -343,23 +375,16 @@ public class Player : MonoBehaviour
 
         await UniTask.Delay(1100);
 
-        Debug.Log(transform.position.z);
-
-        onDeathDone?.Invoke((int)transform.position.z, levelCoins);
+        onDeathDone?.Invoke(transform.position.z, levelCoins);
     }
 
     private IObstacle ignoringObstacle = null;
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        // Проверяем, есть ли у объекта интерфейс IObstacle
-        IObstacle obstacle = hit.gameObject.GetComponent<IObstacle>();
-        if (obstacle != null)
+        if (hit.collider.TryGetComponent(out IObstacle obstacle))
         {
             Side side = DetermineCollisionSide(hit.normal);
-
-            Debug.Log($"Столкновение с {hit.gameObject.name}, сторона {side.ToString()}");
-
             if (ignoringObstacle != obstacle)
             {
                 switch (side)
@@ -431,34 +456,7 @@ public class Player : MonoBehaviour
 
         return Side.NaS;
     }
-
-
-    // Определение стороны столкновения
-    private string DetermineCollisionSide(Vector3 collisionVector, Vector3 movementDirection)
-    {
-        // Проекция вектора столкновения на плоскость XZ
-        Vector3 horizontalCollisionVector = new Vector3(collisionVector.x, 0, collisionVector.z).normalized;
-
-        // Угол между направлением движения и горизонтальной проекцией вектора столкновения
-        float horizontalAngle = Vector3.Angle(movementDirection, horizontalCollisionVector);
-
-        // Определяем, с какой стороны произошло столкновение
-        if (horizontalAngle < 45.0f)
-            return "СПЕРЕДИ";
-        else if (horizontalAngle > 135.0f)
-            return "СЗАДИ";
-        else
-        {
-            // Проверяем, слева или справа
-            Vector3 crossProduct = Vector3.Cross(movementDirection, collisionVector);
-            if (crossProduct.y > 0)
-                return "СПРАВА";
-            else
-                return "СЛЕВА";
-        }
-    }
-
-
+    
     private void GetHit()
     {
         onGetDamage?.Invoke(1);

@@ -4,7 +4,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LeaderScreen : MonoBehaviour
+public class LeaderScreen : MonoBehaviour, ICategoryScreen
 {
     private List<LeaderFrame> createdFrames = new List<LeaderFrame>();
     [SerializeField] private MenuHandler menu;
@@ -34,7 +34,7 @@ public class LeaderScreen : MonoBehaviour
             {
                 var go = Instantiate(framePrefab, root);
                 go.SetupFrame(rank, user.Nickname,
-                    leaderParamName.Equals("coins") ? $"{user.coins}<sprite=0>" : user.maxScore.ToString(),
+                    leaderParamName.Equals("coins") ? $"{user.coins} <sprite=0>" : user.maxScore.ToString(),
                     user.UID == menu.GetUID);
 
                 createdFrames.Add(go);
@@ -58,5 +58,10 @@ public class LeaderScreen : MonoBehaviour
         }
 
         gameObject.SetActive(false);
+    }
+
+    public void EnableScreen()
+    {
+        throw new NotImplementedException();
     }
 }

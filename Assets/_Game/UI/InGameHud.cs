@@ -6,7 +6,7 @@ public class InGameHud : MonoBehaviour
 {
     [SerializeField] private RectTransform scoreLayout;
 
-    [SerializeField] private TextMeshProUGUI scoreAmount, multiAmount, maxScoreText, coinsAmount;
+    [SerializeField] private TextMeshProUGUI scoreAmount, maxScoreText, coinsAmount;
 
     [SerializeField] private Player player;
 
@@ -18,29 +18,27 @@ public class InGameHud : MonoBehaviour
 
     public async void ShowHud(MenuHandler menu = null)
     {
-        scoreLayout.anchoredPosition = new Vector2(-1000, -210);
+        scoreLayout.anchoredPosition = new Vector2(-1300, -300);
 
         if (menu != null)
             this.menu = menu;
 
         gameObject.SetActive(true);
         maxScore = await menu.GetMaxScore();
-        multi = await menu.GetCurrentMultiplier();
+        multi = menu.GetUserMulti;
 
-
-        multiAmount.text = multi.ToString();
-        maxScoreText.text = "record: "+maxScore.ToString();
+        maxScoreText.text = "record: " + maxScore.ToString();
         scoreLayout.DOAnchorPosX(0, 1f);
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        scoreAmount.text = ((int)player.transform.position.z * multi).ToString();
-        coinsAmount.text = $"<sprite=0> {player.AddCoin}";
+        scoreAmount.text = $"{Mathf.FloorToInt(player.transform.position.z * multi)}";
+        coinsAmount.text = $"{player.AddCoin}";
     }
 
     public void HideHud()
     {
-        scoreLayout.DOAnchorPosX(-1000, 1f).OnComplete(() => gameObject.SetActive(false));
+        scoreLayout.DOAnchorPosX(-1300, 1f).OnComplete(() => gameObject.SetActive(false));
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,19 +9,26 @@ public class DefaultMenuScreen : Screen, IDragHandler, IBeginDragHandler, IEndDr
     protected MenuHandler menu;
     private Action onClose;
     private RectTransform rectTransform;
-    private Vector2 startDragPosition; 
+    private Vector2 startDragPosition;
     private Vector2 originalPosition = new Vector2(0, yPosToShow);
     private float dragStartTime;
     private const float SpeedThreshold = 1000f;
 
-    private void Start()
+    // private void OnValidate()
+    // {
+    //     rectTransform = GetComponent<RectTransform>();
+    // }
+
+    private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
     }
 
     public override Screen OpenScreen()
     {
-        transform.DOKill();
+        rectTransform = GetComponent<RectTransform>();
+
+        rectTransform.DOKill();
         SetInitialPosition();
         gameObject.SetActive(true);
         MoveToShowPosition();
@@ -29,7 +37,9 @@ public class DefaultMenuScreen : Screen, IDragHandler, IBeginDragHandler, IEndDr
 
     public override void OpenScreenLazy()
     {
-        transform.DOKill();
+        rectTransform = GetComponent<RectTransform>();
+
+        rectTransform.DOKill();
         SetInitialPosition();
         gameObject.SetActive(true);
         MoveToShowPosition();
@@ -37,23 +47,27 @@ public class DefaultMenuScreen : Screen, IDragHandler, IBeginDragHandler, IEndDr
 
     public void SetupMenu(MenuHandler menu)
     {
+        rectTransform = GetComponent<RectTransform>();
+
         this.menu = menu;
     }
 
     public void SetupCloseScreen(Action onCloseClick)
     {
+        rectTransform = GetComponent<RectTransform>();
+
         onClose += onCloseClick;
     }
 
     public override void CloseScreen()
     {
-        transform.DOMoveY(yPosToHide, animationDuration)
+        rectTransform.DOAnchorPosY(yPosToHide, animationDuration)
             .SetEase(animationEase)
             .OnComplete(() =>
             {
-                gameObject.SetActive(false);
                 onClose?.Invoke();
-                menu.canPlay = true;
+                gameObject.SetActive(false);
+                // menu.canPlay = true;
             });
     }
 
@@ -82,8 +96,9 @@ public class DefaultMenuScreen : Screen, IDragHandler, IBeginDragHandler, IEndDr
         float dragSpeed = dragDistance / dragDuration;
 
         Debug.Log(dragSpeed);
-        
-        if (rectTransform.anchoredPosition.y < originalPosition.y - rectTransform.rect.height / 2 || dragSpeed > SpeedThreshold)
+
+        if (rectTransform.anchoredPosition.y < originalPosition.y - rectTransform.rect.height / 2 ||
+            dragSpeed > SpeedThreshold)
         {
             CloseScreen();
         }
@@ -100,7 +115,6 @@ public class DefaultMenuScreen : Screen, IDragHandler, IBeginDragHandler, IEndDr
 
     private void MoveToShowPosition()
     {
-        menu.canPlay = false;
-        transform.DOMoveY(yPosToShow, animationDuration).SetEase(animationEase);
+        rectTransform.DOAnchorPosY(yPosToShow, animationDuration).SetEase(animationEase);
     }
 }

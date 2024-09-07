@@ -15,32 +15,34 @@ public class API
     {
         using (UnityWebRequest request = new UnityWebRequest(url, method))
         {
-            if (!string.IsNullOrEmpty(jsonData))
+            if (jsonData != null)
             {
-                var content = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData))
+                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData))
                 {
                     contentType = "application/json"
                 };
-                request.uploadHandler = content;
             }
 
             request.downloadHandler = new DownloadHandlerBuffer();
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             var operation = request.SendWebRequest();
             await operation.ToUniTask();
 
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                return request.downloadHandler.text;
-            }
-            else
+            stopwatch.Stop();
+
+            Debug.Log($"WebRequest to {url} took {stopwatch.ElapsedMilliseconds} ms.");
+
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"Request error: {request.error}\nURL: {url}");
                 throw new Exception($"Request failed with error: {request.error}");
             }
+
+            return request.downloadHandler.text;
         }
     }
-    
-    
 
     public async UniTask<User> CreateUserAsync(long userId, string nickname, bool isPremium, bool canBeReferral)
     {
@@ -96,7 +98,7 @@ public class API
         }
         else
         {
-            Debug.LogError($"Cannot parse user data with uid {userId} by param {paramName}, returning 0.");
+            // Debug.LogError($"Cannot parse user data with uid {userId} by param {paramName}, returning 0.");
             return 0;
         }
     }
@@ -109,7 +111,7 @@ public class API
         await SendWebRequestAsync(url, "PUT", jsonData);
         Debug.Log("Data was updated successfully.");
     }
-    
+
     public async UniTask UpdateUserDataByParamAsync(long userId, string paramName, bool updateData)
     {
         string url = $"{databaseURL}/users/{userId}/{paramName}.json";
@@ -137,7 +139,8 @@ public class API
         {
             try
             {
-                List<ReferralFriend> referralFriends = JsonConvert.DeserializeObject<List<ReferralFriend>>(responseData);
+                List<ReferralFriend> referralFriends =
+                    JsonConvert.DeserializeObject<List<ReferralFriend>>(responseData);
                 return referralFriends ?? new List<ReferralFriend>();
             }
             catch (Exception ex)
@@ -155,26 +158,19 @@ public class API
 
     public async UniTask AddReferralFriendAsync(long userId, ReferralFriend newFriend)
     {
-        List<ReferralFriend> referralFriends = await GetReferralFriendsAsync(userId);
+        var referralFriends = await GetReferralFriendsAsync(userId) ?? new List<ReferralFriend>();
 
-        if (referralFriends.Count != 0 || referralFriends != null)
+        if (referralFriends.All(friend => friend.UID != newFriend.UID))
         {
-            foreach (var friend in referralFriends)
-            {
-                if (friend.UID == newFriend.UID)
-                {
-                    Debug.Log($"Referral user with UID={newFriend.UID} already exists, return null");
-                    return;
-                }
-            }
+            referralFriends.Add(newFriend);
+            string jsonData = JsonConvert.SerializeObject(referralFriends);
+            string url = $"{databaseURL}/users/{userId}/ReferralFriends.json";
+            await SendWebRequestAsync(url, "PUT", jsonData);
         }
-        
-        referralFriends.Add(newFriend);
-
-        string jsonData = JsonConvert.SerializeObject(referralFriends);
-        
-        string url = $"{databaseURL}/users/{userId}/ReferralFriends.json";
-        await SendWebRequestAsync(url, "PUT", jsonData);
+        else
+        {
+            Debug.Log($"Referral user with UID={newFriend.UID} already exists, skipping add operation.");
+        }
     }
 
     public async UniTask AddReferralFriendsListAsync(long userId, List<ReferralFriend> newFriends)
@@ -287,35 +283,35 @@ public class API
 
         await SendWebRequestAsync(url, "PUT", requestBody);
     }
-    
+
     public async UniTask<List<string>> GetUrlsAsync(string urlType)
     {
         string url = $"{databaseURL}/tasks/{urlType}.json";
-    
+
         string jsonResponse = await SendWebRequestAsync(url, "GET");
-    
+
         List<string> urls = JsonConvert.DeserializeObject<List<string>>(jsonResponse) ?? new List<string>();
-    
+
         return urls;
     }
-    
+
     public async UniTask AddUrlToUserAsync(long userId, string urlToAdd)
     {
         // Получаем текущий список URL-ов, которые пользователь уже выполнил
         string userUrlsPath = $"{databaseURL}/users/{userId}/alreadyDoneUrls/.json";
         string jsonResponse = await SendWebRequestAsync(userUrlsPath, "GET");
-    
+
         List<string> userUrls = JsonConvert.DeserializeObject<List<string>>(jsonResponse) ?? new List<string>();
 
         // Добавляем новый URL, если его еще нет в списке
         if (!userUrls.Contains(urlToAdd))
         {
             userUrls.Add(urlToAdd);
-        
+
             // Сохраняем обновленный список обратно в базу данных
             string jsonData = JsonConvert.SerializeObject(userUrls);
             await SendWebRequestAsync(userUrlsPath, "PUT", jsonData);
-        
+
             Debug.Log("URL was added to user data successfully.");
         }
         else

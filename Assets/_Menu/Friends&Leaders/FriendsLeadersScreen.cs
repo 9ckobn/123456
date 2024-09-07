@@ -1,19 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 public class FriendsLeadersScreen : DefaultMenuScreen
 {
-    [SerializeField] private LeaderScreen friendsInactive, friendsActive;
+    [SerializeField] private FriendsScreen friendsScreen;
 
     [SerializeField] private Button inviteFriendsButton;
 
     [SerializeField] private LeaderScreen coinLeaders, scoreLeaders;
 
-    [SerializeField] private SwitchButton friendSwitch, coinLeaderSwitch, scoreLeaderSwitch;
+    [SerializeField] private SwitchCategoryButton friendSwitch, coinLeaderSwitch, scoreLeaderSwitch;
 
-    private LeaderScreen activeScreen = null;
+    private ICategoryScreen activeScreen = null;
 
     private enum screenType
     {
@@ -45,7 +42,7 @@ public class FriendsLeadersScreen : DefaultMenuScreen
         switch (screen)
         {
             case screenType.friends:
-                activeScreen = friendsInactive;
+                activeScreen = friendsScreen;
                 inviteFriendsButton.onClick = menu.OpenInviteFriends;
                 friendSwitch.interactable = false;
                 activeScreen.EnableScreen();
@@ -61,7 +58,5 @@ public class FriendsLeadersScreen : DefaultMenuScreen
                 activeScreen.EnableScreen("maxScore");
                 break;
         }
-
-        
     }
 }
